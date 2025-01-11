@@ -19,7 +19,7 @@ This project is built upon the [Premake5](https://premake.github.io/) metabuild 
 * Clone the repository:
 ```
 git clone https://github.com/Luminyx1/Nasmo.git
-cd coldcpu
+cd Nasmo
 ```
 * Generate build files:
   * Windows (Visual Studio):

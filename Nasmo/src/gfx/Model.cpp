@@ -98,7 +98,7 @@ void nsm::Model::addInstance(std::size_t* outID) {
     NSM_ASSERT(mInstanceIDs[*outID] == outID, "Instance ID ", *outID, " not set correctly");
 
     for (auto& [name, object] : mObjects) {
-        object->growInstanceDataBuffer(mInstanceIDs.size());
+        object->growInstanceDataBuffer();
         object->growTransformBuffer();
     }
 }
@@ -114,7 +114,7 @@ void nsm::Model::removeInstance(std::size_t id) {
     }
 
     for (auto& [name, object] : mObjects) {
-        object->shrinkInstanceDataBuffer(mInstanceIDs.size(), id);
+        object->shrinkInstanceDataBuffer(id);
         object->shrinkTransformBuffer(id);
     }
 }
@@ -393,15 +393,15 @@ nsm::Model::Object::~Object() {
     }
 }
 
-void nsm::Model::Object::growInstanceDataBuffer(const std::size_t newCount) {
+void nsm::Model::Object::growInstanceDataBuffer() {
     for (const auto& [name, child] : mChildren) {
-        child->growInstanceDataBuffer(newCount);
+        child->growInstanceDataBuffer();
     }
 }
 
-void nsm::Model::Object::shrinkInstanceDataBuffer(const std::size_t newCount, const std::size_t missingIndex) {
+void nsm::Model::Object::shrinkInstanceDataBuffer(const std::size_t missingIndex) {
     for (const auto& [name, child] : mChildren) {
-        child->shrinkInstanceDataBuffer(newCount, missingIndex);
+        child->shrinkInstanceDataBuffer(missingIndex);
     }
 }
 
@@ -585,23 +585,29 @@ void nsm::Model::MeshObject::setInstanceDataBufferEntrySize(const std::size_t en
     mInstanceDataBuffer.setElementSize(entrySize);
 }
 
-void nsm::Model::MeshObject::growInstanceDataBuffer(const std::size_t newCount) {
+void nsm::Model::MeshObject::growInstanceDataBuffer() {
     for (const auto& [name, child] : mChildren) {
-        child->growInstanceDataBuffer(newCount);
+        child->growInstanceDataBuffer();
     }
 
-    mInstanceDataBuffer.addElement(newCount);
-    mInstanceDataDirty = true;
-    mTransformBuffer.resize(newCount, glm::mat4(1.0f));
+    if (mInstanceDataBuffer.getElementSize() > 0) {
+        mInstanceDataBuffer.addElement();
+        mInstanceDataDirty = true;
+    }
+    
+    mTransformBuffer.push_back(glm::mat4(1.0f));
 }
 
-void nsm::Model::MeshObject::shrinkInstanceDataBuffer(const std::size_t newCount, const std::size_t missingIndex) {
-    mInstanceDataBuffer.removeElement(newCount, missingIndex);
-    mInstanceDataDirty = true;
+void nsm::Model::MeshObject::shrinkInstanceDataBuffer(const std::size_t missingIndex) {
+    if (mInstanceDataBuffer.getElementSize() > 0) {
+        mInstanceDataBuffer.removeElement(missingIndex);
+        mInstanceDataDirty = true;
+    }
+    
     mTransformBuffer.erase(mTransformBuffer.begin() + missingIndex);
 
     for (const auto& [name, child] : mChildren) {
-        child->shrinkInstanceDataBuffer(newCount, missingIndex);
+        child->shrinkInstanceDataBuffer(missingIndex);
     }
 }
 

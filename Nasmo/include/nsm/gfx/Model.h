@@ -8,7 +8,7 @@
 #include <nsm/gfx/ShaderStorage.h>
 #include <nsm/gfx/RenderInfo.h>
 #include <nsm/debug/Assert.h>
-#include <nsm/util/AnyVector.h>
+#include <nsm/util/UnorderedAnyVector.h>
 
 #include <map>
 #include <string>
@@ -65,8 +65,8 @@ namespace nsm {
             Object(Object* parent, const fastgltf::Asset& gltf, const std::map<std::string, nsm::Model::Mesh*>& meshes, const glm::mat4& transform, const fastgltf::pmr::MaybeSmallVector<size_t>& children, bool transformOnly = true);
             virtual ~Object();
 
-            virtual void growInstanceDataBuffer(const std::size_t newCount);
-            virtual void shrinkInstanceDataBuffer(const std::size_t newCount, const std::size_t missingIndex);
+            virtual void growInstanceDataBuffer();
+            virtual void shrinkInstanceDataBuffer(const std::size_t missingIndex);
             virtual void setInstanceData(const void* data, const std::size_t index);
             virtual void setInstanceDataBufferEntrySize(const std::size_t) { }
             virtual Mesh* getMesh() { return nullptr; }
@@ -104,8 +104,8 @@ namespace nsm {
             MeshObject(Object* parent, const fastgltf::Asset& gltf, const std::map<std::string, nsm::Model::Mesh*>& meshes, const std::string& meshName, const glm::mat4& transform, const fastgltf::pmr::MaybeSmallVector<size_t>& children);
             ~MeshObject();
 
-            void growInstanceDataBuffer(const std::size_t newCount) override;
-            void shrinkInstanceDataBuffer(const std::size_t newCount, const std::size_t missingIndex) override;
+            void growInstanceDataBuffer() override;
+            void shrinkInstanceDataBuffer(const std::size_t missingIndex) override;
             void setInstanceData(const void* data, const std::size_t index) override;
             void setInstanceDataBufferEntrySize(const std::size_t entrySize) override;
             Mesh* getMesh() override { return mMesh; }
@@ -118,7 +118,7 @@ namespace nsm {
             glm::mat4 preDraw(const std::size_t instanceCount);
 
             Mesh* mMesh;
-            AnyVector mInstanceDataBuffer;
+            UnorderedAnyVector mInstanceDataBuffer;
             bool mInstanceDataDirty;
             ShaderStorage mInstanceDataSSBO;
             ShaderStorage mTransformSSBO;
